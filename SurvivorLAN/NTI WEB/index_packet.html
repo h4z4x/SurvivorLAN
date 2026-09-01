@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>SURVIVORLAN — Cisco Web Terminal & Team Roster</title>
+  <style>
+    body {
+      background-color: #070907;
+      color: #d1d5db;
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 0;
+      padding: 15px;
+    }
+    .header {
+      background-color: #121612;
+      border: 2px solid #eab308;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+    .title {
+      color: #eab308;
+      font-size: 22px;
+      font-weight: bold;
+      margin: 0 0 5px 0;
+    }
+    .subtitle {
+      color: #9ca3af;
+      font-size: 13px;
+      margin: 0;
+    }
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: bold;
+      border-radius: 3px;
+      margin-top: 5px;
+    }
+    .badge-bio { background-color: #14532d; color: #4ade80; border: 1px solid #22c55e; }
+    .badge-alert { background-color: #7f1d1d; color: #f87171; border: 1px solid #ef4444; }
+    .badge-police { background-color: #1e3a8a; color: #93c5fd; border: 1px solid #3b82f6; }
+
+    .card {
+      background-color: #0d100d;
+      border: 1px solid #2b352b;
+      padding: 12px;
+      margin-bottom: 15px;
+    }
+    .card-title {
+      color: #eab308;
+      font-size: 15px;
+      font-weight: bold;
+      border-bottom: 1px solid #2b352b;
+      padding-bottom: 5px;
+      margin-bottom: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      background-color: #0d100d;
+      margin-top: 8px;
+    }
+    th {
+      background-color: #191f19;
+      color: #eab308;
+      text-align: left;
+      padding: 8px;
+      border: 1px solid #2b352b;
+    }
+    td {
+      padding: 8px;
+      border: 1px solid #202820;
+      color: #e5e7eb;
+    }
+    tr:nth-child(even) { background-color: #121612; }
+
+    .btn {
+      background-color: #27272a;
+      color: #facc15;
+      border: 1px solid #eab308;
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-right: 5px;
+      margin-top: 5px;
+    }
+    .btn:hover {
+      background-color: #eab308;
+      color: #000;
+    }
+    .btn-red {
+      color: #ef4444;
+      border-color: #ef4444;
+    }
+    .btn-red:hover {
+      background-color: #ef4444;
+      color: #fff;
+    }
+
+    /* LinkedIn Button for Packet Tracer */
+    .linkedin-btn {
+      display: inline-block;
+      background-color: #0077b5;
+      color: #ffffff;
+      padding: 4px 10px;
+      text-decoration: none;
+      font-size: 11px;
+      font-weight: bold;
+      border-radius: 3px;
+      border: 1px solid #005582;
+      margin-top: 3px;
+    }
+    .linkedin-btn:hover {
+      background-color: #005582;
+      color: #ffffff;
+    }
+
+    .terminal {
+      background-color: #000000;
+      border: 1px solid #3d4b3d;
+      color: #4ade80;
+      font-family: "Courier New", Courier, monospace;
+      padding: 10px;
+      font-size: 12px;
+      line-height: 1.5;
+      margin-top: 8px;
+    }
+    .term-red { color: #f87171; font-weight: bold; }
+    .term-yellow { color: #facc15; font-weight: bold; }
+    .term-blue { color: #60a5fa; }
+  </style>
+</head>
+<body>
+
+  <!-- Top Emergency Header -->
+  <div class="header">
+    <div class="title">&#9763; SURVIVORLAN &#8212; DEFENSE NOC & SERVICES PORTAL</div>
+    <p class="subtitle">Quarantine Survival Network &#8212; 192.168.0.0/24 Multi-VLAN Tactical Architecture</p>
+    <div style="margin-top: 8px;">
+      <span class="badge badge-bio">HTTP/WEB SERVER ONLINE (192.168.60.2)</span>
+      <span class="badge badge-police">POLICE PRIVILEGED ROUTING ACTIVE</span>
+      <span class="badge badge-alert">VLAN 666 QUARANTINED</span>
+    </div>
+  </div>
+
+  <!-- Key Metrics Summary -->
+  <table style="margin-bottom: 15px;">
+    <tr>
+      <th style="width: 25%;">CORE ROUTING (SW-CORE)</th>
+      <th style="width: 25%;">OSPF BACKBONE</th>
+      <th style="width: 25%;">ACL STATUS</th>
+      <th style="width: 25%;">ACTIVE SEGMENTS</th>
+    </tr>
+    <tr>
+      <td><b>192.168.100.2/30 (Fa0/1)</b></td>
+      <td><span style="color: #4ade80;">Area 0 (R1 &harr; SW-CORE)</span></td>
+      <td><span style="color: #f87171;">EXTENDED + STANDARD ENFORCED</span></td>
+      <td><b>7 VLANs (802.1Q Trunks)</b></td>
+    </tr>
+  </table>
+
+  <!-- Section 1: Project Team & Responsibilities -->
+  <div class="card">
+    <div class="card-title">1. &#128101; PROJECT TEAM & ENGINEERING ROSTER</div>
+    <table>
+      <tr>
+        <th style="width: 22%;">Engineer</th>
+        <th style="width: 25%;">Specialized Role</th>
+        <th style="width: 38%;">Assigned Scope & Deliverables</th>
+        <th style="width: 15%; text-align: center;">LinkedIn</th>
+      </tr>
+      <tr>
+        <td><b>Youssef Aboolo</b></td>
+        <td><span style="color: #facc15;">Network Architecture & Core</span></td>
+        <td>Topology &bull; IP Addressing &bull; VLANs &bull; Trunking &bull; Inter-VLAN Routing</td>
+        <td style="text-align: center;">
+          <a class="linkedin-btn" href="https://www.linkedin.com/in/youssef-aboolo-741a6036a/" target="_blank">LinkedIn &rarr;</a>
+        </td>
+      </tr>
+      <tr>
+        <td><b>Youssef Ehab</b></td>
+        <td><span style="color: #facc15;">Routing & Connectivity</span></td>
+        <td>Routers (R1/R0) &bull; OSPF Area 0 &bull; Default Route &bull; Serial Se0/2/0 &bull; Testing</td>
+        <td style="text-align: center;">
+          <a class="linkedin-btn" href="https://www.linkedin.com/in/youssef-ehab-5982a8357/" target="_blank">LinkedIn &rarr;</a>
+        </td>
+      </tr>
+      <tr>
+        <td><b>Marwan Gabrallah</b></td>
+        <td><span style="color: #facc15;">Network Services & Servers</span></td>
+        <td>DHCP Server &bull; DNS Server &bull; HTTP/Web Server &bull; FTP Server &bull; Mail Server</td>
+        <td style="text-align: center;">
+          <a class="linkedin-btn" href="https://www.linkedin.com/in/marwan-gabrallah-3295652b2/" target="_blank">LinkedIn &rarr;</a>
+        </td>
+      </tr>
+      <tr>
+        <td><b>Mostafa Eltorky</b></td>
+        <td><span style="color: #facc15;">Cybersecurity & Boundary Defense</span></td>
+        <td>ACL ext ZOMBIE-CONTAINMENT &bull; ACL std POLICE-ONLY &bull; Port Security &bull; SSHv2</td>
+        <td style="text-align: center;">
+          <a class="linkedin-btn" href="https://www.linkedin.com/in/mostafa-eltorky-15550mtm/" target="_blank">LinkedIn &rarr;</a>
+        </td>
+      </tr>
+      <tr>
+        <td><b>Yousef Hazaa</b></td>
+        <td><span style="color: #facc15;">Web Dashboard & Frontend NOC</span></td>
+        <td>Network Status &bull; Threat Center &bull; Security Telemetry &bull; Tactical Web Design</td>
+        <td style="text-align: center;">
+          <a class="linkedin-btn" href="https://www.linkedin.com/in/yousef-hazaa-270632371/" target="_blank">LinkedIn &rarr;</a>
+        </td>
+      </tr>
+      <tr>
+        <td><b>Nadein Reda</b></td>
+        <td><span style="color: #facc15;">Integration & Presentation &#127916;</span></td>
+        <td>Integration &bull; Testing &bull; Troubleshooting &bull; Documentation &bull; Demo Scenario</td>
+        <td style="text-align: center;">
+          <a class="linkedin-btn" href="https://www.linkedin.com/in/nadein-reda-0b05622bb/" target="_blank">LinkedIn &rarr;</a>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Section 2: VLAN & Subnet Matrix -->
+  <div class="card">
+    <div class="card-title">2. MUNICIPAL VLAN & IP ALLOCATION MATRIX</div>
+    <table>
+      <tr>
+        <th>VLAN</th>
+        <th>Department / Sector</th>
+        <th>Subnet Scope</th>
+        <th>SVI Gateway</th>
+        <th>Core Port</th>
+        <th>Access Permission Policy</th>
+      </tr>
+      <tr>
+        <td><b>VLAN 10</b></td>
+        <td>Survivors Zone</td>
+        <td>192.168.10.0/24</td>
+        <td>192.168.10.1</td>
+        <td>Fa0/6</td>
+        <td>All Internal Sectors + Zombie 666 <span style="color: #f87171;">(Denied: CCTV 50)</span></td>
+      </tr>
+      <tr>
+        <td><b>VLAN 20</b></td>
+        <td>Hospital & Triage</td>
+        <td>192.168.20.0/24</td>
+        <td>192.168.20.1</td>
+        <td>Fa0/2</td>
+        <td>All Internal Sectors + Zombie 666 <span style="color: #f87171;">(Denied: CCTV 50)</span></td>
+      </tr>
+      <tr style="background-color: #1a2e05;">
+        <td><b>VLAN 30</b></td>
+        <td>Police Department</td>
+        <td>192.168.30.0/24</td>
+        <td>192.168.30.1</td>
+        <td>Fa0/3</td>
+        <td><b style="color: #4ade80;">FULL ACCESS (VLAN 10, 20, 40, 50 CCTV, 60, 666)</b></td>
+      </tr>
+      <tr>
+        <td><b>VLAN 40</b></td>
+        <td>Research Bio-Lab</td>
+        <td>192.168.40.0/24</td>
+        <td>192.168.40.1</td>
+        <td>Fa0/8</td>
+        <td>All Internal Sectors + Zombie 666 <span style="color: #f87171;">(Denied: CCTV 50)</span></td>
+      </tr>
+      <tr style="background-color: #2b1212;">
+        <td><b>VLAN 50</b></td>
+        <td>CCT / Surveillance</td>
+        <td>192.168.50.0/24</td>
+        <td>192.168.50.1</td>
+        <td>Fa0/5</td>
+        <td><b style="color: #60a5fa;">RESTRICTED: Police Only</b> <span style="color: #f87171;">(Deny Any Other)</span></td>
+      </tr>
+      <tr>
+        <td><b>VLAN 60</b></td>
+        <td>Core Servers (SERVES)</td>
+        <td>192.168.60.0/24</td>
+        <td>192.168.60.1</td>
+        <td>Fa0/7</td>
+        <td>All Internal Sectors + Zombie 666 <span style="color: #f87171;">(Denied: CCTV 50)</span></td>
+      </tr>
+      <tr style="background-color: #3b0d0d;">
+        <td><b>VLAN 666</b></td>
+        <td>Infected / Zombies</td>
+        <td>192.168.66.0/24</td>
+        <td>192.168.66.1</td>
+        <td>Fa0/10</td>
+        <td><b style="color: #f87171;">ISOLATED (Dropped to Hospital 20, Lab 40, Servers 60)</b></td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Section 3: ACL Rules Summary -->
+  <div class="card">
+    <div class="card-title">3. ACTIVE CISCO ACCESS CONTROL LISTS (ACL)</div>
+    <div class="terminal">
+      <span class="term-yellow">! --- 1. EXTENDED ACL ON SW-CORE (ZOMBIE QUARANTINE) ---</span><br>
+      <b>ip access-list extended ZOMBIE-CONTAINMENT</b><br>
+      &nbsp;&nbsp;10 deny ip 192.168.66.0 0.0.0.255 192.168.20.0 0.0.0.255 <span class="term-red">(Drop to Hospital)</span><br>
+      &nbsp;&nbsp;20 deny ip 192.168.66.0 0.0.0.255 192.168.40.0 0.0.0.255 <span class="term-red">(Drop to Research Lab)</span><br>
+      &nbsp;&nbsp;30 deny ip 192.168.66.0 0.0.0.255 192.168.60.0 0.0.0.255 <span class="term-red">(Drop to Core Servers)</span><br>
+      &nbsp;&nbsp;40 permit ip 192.168.66.0 0.0.0.255 any <span class="term-blue">(Allow internal sectors monitoring)</span><br><br>
+
+      <span class="term-yellow">! --- 2. STANDARD ACL ON SW-CCT (CCTV EXCLUSIVE ACCESS) ---</span><br>
+      <b>ip access-list standard POLICE-ONLY</b><br>
+      &nbsp;&nbsp;10 permit 192.168.30.0 0.0.0.255 <span class="term-blue">(Police Department Authorized)</span><br>
+      &nbsp;&nbsp;20 deny any <span class="term-red">(Explicit Drop for Survivors, Hospital, Lab, Servers, Zombies)</span>
+    </div>
+  </div>
+
+  <!-- Section 4: Interactive Terminal Simulation -->
+  <div class="card">
+    <div class="card-title">4. INTERACTIVE DIAGNOSTIC BENCH</div>
+    <p style="font-size: 12px; margin: 0 0 8px 0; color: #9ca3af;">
+      Click any button below to verify ACL packet filtering and connectivity status on this terminal:
+    </p>
+
+    <button class="btn btn-red" onclick="runZombieTest()">Simulate Zombie Intrusion (VLAN 666 -> Lab)</button>
+    <button class="btn" onclick="runPoliceTest()">Verify Police -> CCTV Access</button>
+    <button class="btn" onclick="runSurvivorTest()">Verify Survivor -> CCTV Attempt</button>
+    <button class="btn" onclick="runReset()">Clear Terminal</button>
+
+    <div id="cli-box" class="terminal" style="min-height: 110px;">
+      SW-CORE# Ready for diagnostic validation. Select a test above...
+    </div>
+  </div>
+
+  <p style="text-align: center; font-size: 11px; color: #6b7280; margin-top: 15px;">
+    SURVIVORLAN &bull; Cisco Packet Tracer Hosted Web Interface &bull; Local IP: 192.168.60.2
+  </p>
+
+  <script>
+    function runZombieTest() {
+      var box = document.getElementById('cli-box');
+      box.innerHTML = '<span class="term-yellow">SW-CORE# test packet ingress from 192.168.66.10 to 192.168.40.10</span><br>' +
+                      'TCAM Hardware Ingress on Fa0/10 (VLAN 666)...<br>' +
+                      '<span class="term-red">MATCH: ACL ext ZOMBIE-CONTAINMENT Rule 20 (deny ip 192.168.66.0 -> 192.168.40.0)</span><br>' +
+                      '<span class="term-red">RESULT: PACKET DROPPED (0.00ms latency) &#8212; ACCESS DENIED (100% Drops)</span>';
+    }
+
+    function runPoliceTest() {
+      var box = document.getElementById('cli-box');
+      box.innerHTML = '<span class="term-yellow">SW-CCT# test stream from 192.168.30.12 (PC-POL1) to 192.168.50.10 (CAM1)</span><br>' +
+                      'TCAM Hardware Ingress on Fa0/5 (VLAN 50)...<br>' +
+                      '<span class="term-blue">MATCH: ACL std POLICE-ONLY Rule 10 (permit 192.168.30.0 0.0.0.255)</span><br>' +
+                      '<span class="term-blue">RESULT: PACKET FORWARDED &#8212; RTSP VIDEO STREAM PERMITTED (100% Success)</span>';
+    }
+
+    function runSurvivorTest() {
+      var box = document.getElementById('cli-box');
+      box.innerHTML = '<span class="term-yellow">SW-CCT# test stream from 192.168.10.15 (PC-SUR1) to 192.168.50.10 (CAM1)</span><br>' +
+                      'TCAM Hardware Ingress on Fa0/5 (VLAN 50)...<br>' +
+                      '<span class="term-red">MATCH: ACL std POLICE-ONLY Rule 20 (deny any => vlan50)</span><br>' +
+                      '<span class="term-red">RESULT: PACKET DROPPED &#8212; UNAUTHORIZED SURVEILLANCE ATTEMPT BLOCKED</span>';
+    }
+
+    function runReset() {
+      var box = document.getElementById('cli-box');
+      box.innerHTML = 'SW-CORE# Ready for diagnostic validation. Select a test above...';
+    }
+  </script>
+
+</body>
+</html>

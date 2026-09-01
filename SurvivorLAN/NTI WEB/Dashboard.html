@@ -1,0 +1,1457 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SURVIVORLAN — Survival Network NOC & Tactical Security Visualization</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            apocalypse: {
+              950: '#070907',
+              900: '#0d100d',
+              850: '#121612',
+              800: '#191f19',
+              750: '#202820',
+              700: '#2b352b',
+              600: '#3d4b3d',
+            },
+            hazard: {
+              yellow: '#eab308',
+              orange: '#f97316',
+              bio: '#22c55e',
+              blood: '#ef4444',
+              amber: '#d97706',
+              rust: '#7c2d12',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- React, ReactDOM, Babel & Recharts -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
+  <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+
+  <style>
+    body {
+      background-color: #070907;
+      color: #e2e8f0;
+      font-family: 'Inter', sans-serif;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0d100d;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #2b352b;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3d4b3d;
+    }
+  </style>
+</head>
+<body class="bg-[#070907] text-slate-200 antialiased selection:bg-amber-500/30 selection:text-amber-300">
+
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo } = React;
+    const { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, BarChart, Bar, PieChart, Pie, Cell } = window.Recharts;
+
+    // Topology IP Scheme & Verified ACL Rules Matching Packet Tracer Exactly
+    const BASE_VLANS_DATA = {
+      10: {
+        id: 10,
+        name: 'VLAN 10',
+        department: 'Survivors Zone',
+        securityLevel: 'Standard Access',
+        status: 'Operational',
+        devicesCount: 3,
+        devicesList: 'PC-SUR1, PC-SUR2, PC-SUR3',
+        switchName: 'SW-SURVIVOR (Fa0/4)',
+        corePort: 'SW-CORE Fa0/6',
+        subnet: '192.168.10.0/24',
+        gateway: '192.168.10.1',
+        allowedConnections: [
+          'VLAN 20 (Hospital & Triage)',
+          'VLAN 30 (Police Department)',
+          'VLAN 40 (Research Lab)',
+          'VLAN 60 (Core Servers & Web/DNS)',
+          'VLAN 666 (Zombie Sector Monitoring)',
+          'External WAN (R1 -> R0)'
+        ],
+        blockedConnections: [
+          'VLAN 50 (CCTV Surveillance - Denied by ACL std POLICE-ONLY)'
+        ],
+        description: 'Civilian quarantine survivor cluster. Full Inter-VLAN access across municipal departments and Zombie monitoring, isolated exclusively from CCTV camera streams by Standard ACL.'
+      },
+      20: {
+        id: 20,
+        name: 'VLAN 20',
+        department: 'Hospital & Triage',
+        securityLevel: 'Critical Access',
+        status: 'Operational',
+        devicesCount: 4,
+        devicesList: 'PC1, PC-DR1, PC-DR2, HOSPITAL SERVER',
+        switchName: 'SW-H (Fa0/5)',
+        corePort: 'SW-CORE Fa0/2',
+        subnet: '192.168.20.0/24',
+        gateway: '192.168.20.1',
+        allowedConnections: [
+          'VLAN 10 (Survivors Zone)',
+          'VLAN 30 (Police Department)',
+          'VLAN 40 (Research Lab)',
+          'VLAN 60 (Core Servers & Web/DHCP)',
+          'VLAN 666 (Zombie Sector Telemetry)',
+          'External WAN (R1 -> R0)'
+        ],
+        blockedConnections: [
+          'VLAN 50 (CCTV Surveillance - Denied by ACL std POLICE-ONLY)'
+        ],
+        description: 'Field Hospital triage and diagnostic stations. Full Inter-VLAN access across all internal sectors and Zombie telemetry, strictly blocked from CCTV streams by Standard ACL.'
+      },
+      30: {
+        id: 30,
+        name: 'VLAN 30',
+        department: 'Police Department',
+        securityLevel: 'Universal Access (All Sectors)',
+        status: 'Operational',
+        devicesCount: 4,
+        devicesList: 'PC3, PC-POL1, PC-POL2, POLICE SERVER',
+        switchName: 'SW-POLICE (Fa0/5)',
+        corePort: 'SW-CORE Fa0/3',
+        subnet: '192.168.30.0/24',
+        gateway: '192.168.30.1',
+        allowedConnections: [
+          'VLAN 50 (CCTV Surveillance - Exclusive Permit by ACL std POLICE-ONLY)',
+          'VLAN 10 (Survivors Zone)',
+          'VLAN 20 (Hospital & Triage)',
+          'VLAN 40 (Research Lab)',
+          'VLAN 60 (Core Servers & Tactical DB)',
+          'VLAN 666 (Zombie Zone Containment)',
+          'External WAN (R1 -> R0)'
+        ],
+        blockedConnections: [
+          'None (Full Unrestricted Municipal Access)'
+        ],
+        description: 'Defense perimeter command with full, unrestricted access to every sector in the city network, including exclusive authorization to stream and control CCTV Surveillance (VLAN 50).'
+      },
+      40: {
+        id: 40,
+        name: 'VLAN 40',
+        department: 'Research Lab',
+        securityLevel: 'Critical Access',
+        status: 'Operational',
+        devicesCount: 3,
+        devicesList: 'PC-SCI1, PC-SCI2, RESEARCH SERVER',
+        switchName: 'SW-RESE (Fa0/4)',
+        corePort: 'SW-CORE Fa0/8',
+        subnet: '192.168.40.0/24',
+        gateway: '192.168.40.1',
+        allowedConnections: [
+          'VLAN 10 (Survivors Zone)',
+          'VLAN 20 (Hospital & Pathology)',
+          'VLAN 30 (Police Department)',
+          'VLAN 60 (Core Servers & FTP)',
+          'VLAN 666 (Zombie Pathogen Telemetry)',
+          'External WAN (R1 -> R0)'
+        ],
+        blockedConnections: [
+          'VLAN 50 (CCTV Surveillance - Denied by ACL std POLICE-ONLY)'
+        ],
+        description: 'Bio-hazard research lab and mutagen sequencing nodes. Fully interconnected with all municipal departments and Zombie telemetry, isolated only from CCTV feeds.'
+      },
+      50: {
+        id: 50,
+        name: 'VLAN 50',
+        department: 'CCT / CCTV Surveillance',
+        securityLevel: 'Restricted (Police Only)',
+        status: 'Operational',
+        devicesCount: 4,
+        devicesList: 'CAM1, CAM2, CAM3, CCT SERVER',
+        switchName: 'SW-CCT (Fa0/5)',
+        corePort: 'SW-CORE Fa0/5',
+        subnet: '192.168.50.0/24',
+        gateway: '192.168.50.1',
+        allowedConnections: [
+          'VLAN 30 (Police Department - permit 192.168.30.0 0.0.0.255)'
+        ],
+        blockedConnections: [
+          'VLAN 10 (Survivors - deny any => vlan50)',
+          'VLAN 20 (Hospital - deny any => vlan50)',
+          'VLAN 40 (Research Lab - deny any => vlan50)',
+          'VLAN 60 (Core Servers - deny any => vlan50)',
+          'VLAN 666 (Zombies - deny any => vlan50)'
+        ],
+        description: 'Perimeter optical cameras (CAM1, CAM2, CAM3) protected by ACL std POLICE-ONLY. Strictly permits only Police (192.168.30.0/24) and denies all other municipal traffic.'
+      },
+      60: {
+        id: 60,
+        name: 'VLAN 60',
+        department: 'Core Servers (SERVES)',
+        securityLevel: 'Critical Access',
+        status: 'Operational',
+        devicesCount: 4,
+        devicesList: 'WEB & DHCP, DNS SERVER, FTP SERVER, MAIL SERVER',
+        switchName: 'SW-SRV (Fa0/5)',
+        corePort: 'SW-CORE Fa0/7',
+        subnet: '192.168.60.0/24',
+        gateway: '192.168.60.1',
+        allowedConnections: [
+          'VLAN 10 (Survivors Zone)',
+          'VLAN 20 (Hospital & Triage)',
+          'VLAN 30 (Police Department)',
+          'VLAN 40 (Research Lab)',
+          'VLAN 666 (Zombie Sector Monitoring)',
+          'External WAN (R1 -> R0)'
+        ],
+        blockedConnections: [
+          'VLAN 50 (CCTV Surveillance - Denied by ACL std POLICE-ONLY)'
+        ],
+        description: 'Municipal enterprise server farm hosting HTTP Web, DNS, Secure FTP, and Mail. Serving all internal municipal departments, isolated solely from CCTV camera streams.'
+      },
+      666: {
+        id: 666,
+        name: 'VLAN 666',
+        department: 'Zombies / Infected Zone',
+        securityLevel: 'Hostile / Quarantined',
+        status: 'Isolated',
+        devicesCount: 3,
+        devicesList: 'PC-PT ZOMBIE 1, ZOMBIE 2, ZOMBIE 3',
+        switchName: 'SW-ZOMBIE (Fa0/4)',
+        corePort: 'SW-CORE Fa0/10',
+        subnet: '192.168.66.0/24',
+        gateway: '192.168.66.1',
+        allowedConnections: [
+          'None (Outbound Dropped by ACL ext ZOMBIE-CONTAINMENT)'
+        ],
+        blockedConnections: [
+          'VLAN 20 (Hospital - deny 192.168.66.0 -> 192.168.20.0)',
+          'VLAN 40 (Research - deny 192.168.66.0 -> 192.168.40.0)',
+          'VLAN 60 (Servers - deny 192.168.66.0 -> 192.168.60.0)',
+          'VLAN 50 (CCTV - Denied by ACL std POLICE-ONLY)'
+        ],
+        description: 'Infected hostile perimeter. Blocked at SW-CORE by ACL ext ZOMBIE-CONTAINMENT from initiating connections to Hospital (20.0), Research (40.0), or Servers (60.0).'
+      }
+    };
+
+    const TECH_STACK = [
+      { id: '1', name: 'VLANs & 802.1Q Trunking', category: 'Layer 2 / 3', description: 'Logical broadcast isolation across SW-CORE (Fa0/2-Fa0/10) connecting 7 isolated departmental switches.', status: 'Enforced' },
+      { id: '2', name: 'Inter-VLAN SVI Routing', category: 'Layer 2 / 3', description: 'Multilayer 3560 SW-CORE handling routing between municipal VLANs with unrestricted Police traversal.', status: 'Active' },
+      { id: '3', name: 'OSPF & Default Routing', category: 'Routing & IP', description: 'Dynamic link state routing between Core Switch (192.168.100.2/30) and Edge Router R1 (192.168.100.1/30) + Serial to R0.', status: 'Operational' },
+      { id: '4', name: 'DHCP & Core IP Relay', category: 'Services', description: 'Centralized dynamic IP assignment configured on Server-PT (WEB&DHCP 192.168.60.x) with IP helper addresses.', status: 'Operational' },
+      { id: '5', name: 'DNS & Name Resolution', category: 'Services', description: 'Dedicated DNS Server (192.168.60.x) translating survivorlan.local and tactical node hostnames.', status: 'Operational' },
+      { id: '6', name: 'HTTP & Tactical Web', category: 'Services', description: 'Emergency municipal portal and survivor registration hub hosted on VLAN 60 Web Server.', status: 'Active' },
+      { id: '7', name: 'SFTP & Tactical FTP Server', category: 'Services', description: 'Centralized repository in VLAN 60 for encrypted forensic research logs and tactical surveillance archives.', status: 'Active' },
+      { id: '8', name: 'SSHv2 Admin Management', category: 'Security', description: 'RSA 1024-bit encrypted remote management for SW-CORE, R1, SW-H, and SW-SRV (admin / Cisco123!).', status: 'Enforced' },
+      { id: '9', name: 'ACL ext ZOMBIE-CONTAINMENT', category: 'Security', description: 'Extended ACL on SW-CORE dropping 192.168.66.0/24 ingress toward Hospital (20.0), Research (40.0), and Servers (60.0).', status: 'Enforced' },
+      { id: '10', name: 'ACL std POLICE-ONLY', category: 'Security', description: 'Standard ACL on SW-CCT permitting solely Police (192.168.30.0/24) into CCTV subnet (VLAN 50) and denying all else.', status: 'Enforced' },
+      { id: '11', name: 'Port Security & Recovery', category: 'Security', description: 'MAC address security limiting endpoints and err-disable auto-recovery playbooks across edge switchports.', status: 'Operational' }
+    ];
+
+    const TEAM_MEMBERS = [
+      { 
+        name: 'Youssef Aboolo', 
+        role: 'Network Architecture & Core', 
+        details: 'Topology • IP Addressing • VLANs • Trunking • Inter-VLAN Routing',
+        linkedin: 'https://www.linkedin.com/in/youssef-aboolo-741a6036a/' 
+      },
+      { 
+        name: 'Youssef Ehab', 
+        role: 'Routing & Connectivity', 
+        details: 'Routers (R1/R0) • OSPF • Default Route • Serial Se0/2/0 • End-to-End Connectivity Testing',
+        linkedin: 'https://www.linkedin.com/in/youssef-ehab-5982a8357/' 
+      },
+      { 
+        name: 'Marwan Gabrallah', 
+        role: 'Network Services & Servers', 
+        details: 'DHCP Server • DNS Server • HTTP/Web Server • FTP Server • Tactical Mail Server',
+        linkedin: 'https://www.linkedin.com/in/marwan-gabrallah-3295652b2/' 
+      },
+      { 
+        name: 'Mostafa Eltorky', 
+        role: 'Cybersecurity & Boundary Defense', 
+        details: 'ACL ext ZOMBIE-CONTAINMENT • ACL std POLICE-ONLY • Port Security • SSHv2 (Cisco123!)',
+        linkedin: 'https://www.linkedin.com/in/mostafa-eltorky-15550mtm/' 
+      },
+      { 
+        name: 'Yousef Hazaa', 
+        role: 'Web Dashboard & Frontend NOC', 
+        details: 'Network Status • Threat Center • Security Status • Zombie Survival Theme',
+        linkedin: 'https://www.linkedin.com/in/yousef-hazaa-270632371/' 
+      },
+      { 
+        name: 'Nadein Reda', 
+        role: 'Integration & Presentation 🎬', 
+        details: 'Integration • Testing • Troubleshooting • Documentation • Presentation • Demo Scenario',
+        linkedin: 'https://www.linkedin.com/in/nadein-reda-0b05622bb/' 
+      }
+    ];
+
+    function App() {
+      const [isPresentationOpen, setIsPresentationOpen] = useState(false);
+      const [isIncidentActive, setIsIncidentActive] = useState(false);
+      const [isLockdown, setIsLockdown] = useState(false);
+      const [selectedVlanId, setSelectedVlanId] = useState(30);
+      const [simStep, setSimStep] = useState(0);
+      const [simResult, setSimResult] = useState(null);
+      const [timeRange, setTimeRange] = useState('1h');
+      const [presentationSlide, setPresentationSlide] = useState(0);
+
+      const vlansData = useMemo(() => {
+        const data = JSON.parse(JSON.stringify(BASE_VLANS_DATA));
+        if (isLockdown) {
+          data[10].status = 'Curfew Locked';
+          data[10].description = 'CIVILIAN LOCKDOWN: Outbound traffic throttled at SW-CORE Fa0/6.';
+          data[666].status = 'PURGED SINKHOLE';
+          data[666].securityLevel = 'DEFCON 1 BLACKLIST';
+        }
+        if (isIncidentActive) {
+          data[20].status = 'Degraded / Link Cut';
+          data[20].description = 'EMERGENCY: Port SW-CORE Fa0/2 is DOWN. OSPF adjacency with SW-H severed.';
+        }
+        return data;
+      }, [isLockdown, isIncidentActive]);
+
+      const selectedVlan = vlansData[selectedVlanId] || vlansData[30];
+
+      const [logs, setLogs] = useState([
+        { id: '1', timestamp: '17:42:11', source: '192.168.66.10 (Zombie 1)', destination: '192.168.40.10 (Research)', protocol: 'TCP', action: 'DENIED', severity: 'CRITICAL', rule: 'ACL ext ZOMBIE-CONTAINMENT' },
+        { id: '2', timestamp: '17:42:13', source: '192.168.30.12 (PC-POL1)', destination: '192.168.50.10 (CAM1)', protocol: 'RTSP', action: 'ALLOWED', severity: 'LOW', rule: 'ACL std POLICE-ONLY (Permit)' },
+        { id: '3', timestamp: '17:42:15', source: '192.168.10.15 (PC-SUR1)', destination: '192.168.50.10 (CAM1)', protocol: 'RTSP', action: 'DENIED', severity: 'HIGH', rule: 'ACL std POLICE-ONLY (Deny)' },
+        { id: '4', timestamp: '17:42:17', source: '192.168.10.15 (PC-SUR1)', destination: '192.168.66.10 (Zombie 1)', protocol: 'ICMP', action: 'ALLOWED', severity: 'LOW', rule: 'permit all -> zombie' },
+        { id: '5', timestamp: '17:42:20', source: '192.168.20.11 (PC-DR1)', destination: '192.168.40.10 (Research)', protocol: 'TCP', action: 'ALLOWED', severity: 'LOW', rule: 'permit inter-vlan' },
+        { id: '6', timestamp: '17:42:24', source: '192.168.66.11 (Zombie 2)', destination: '192.168.60.2 (Web/DHCP)', protocol: 'TCP', action: 'DENIED', severity: 'CRITICAL', rule: 'ACL ext ZOMBIE-CONTAINMENT' }
+      ]);
+
+      const [terminalOutput, setTerminalOutput] = useState([
+        'SW-CORE# show ip interface brief',
+        'Interface              IP-Address      OK? Method Status                Protocol',
+        'FastEthernet0/1        192.168.100.2   YES manual up                    up      (Link to R1 Gig0/0/1)',
+        'FastEthernet0/2        unassigned      YES unset  up                    up      (Trunk to SW-H - VLAN 20)',
+        'FastEthernet0/3        unassigned      YES unset  up                    up      (Trunk to SW-POLICE - VLAN 30)',
+        'FastEthernet0/5        unassigned      YES unset  up                    up      (Trunk to SW-CCT - VLAN 50)',
+        'FastEthernet0/6        unassigned      YES unset  up                    up      (Trunk to SW-SURVIVOR - VLAN 10)',
+        'FastEthernet0/7        unassigned      YES unset  up                    up      (Trunk to SW-SRV - VLAN 60)',
+        'FastEthernet0/8        unassigned      YES unset  up                    up      (Trunk to SW-RESE - VLAN 40)',
+        'FastEthernet0/10       unassigned      YES unset  up                    up      (Trunk to SW-ZOMBIE - VLAN 666)',
+        'Vlan10                 192.168.10.1    YES manual up                    up      (Survivors Gateway)',
+        'Vlan20                 192.168.20.1    YES manual up                    up      (Hospital Gateway)',
+        'Vlan30                 192.168.30.1    YES manual up                    up      (Police Gateway)',
+        'Vlan40                 192.168.40.1    YES manual up                    up      (Research Gateway)',
+        'Vlan50                 192.168.50.1    YES manual up                    up      (CCTV Gateway)',
+        'Vlan60                 192.168.60.1    YES manual up                    up      (Servers Gateway)',
+        'Vlan666                192.168.66.1    YES manual up                    up      (Zombie Gateway)',
+        '-- TACTICAL CONSOLE READY. TOPOLOGY ACCURATE MATCH.'
+      ]);
+      const [activeDiagStep, setActiveDiagStep] = useState(0);
+
+      const blockedCount = isLockdown ? 11420 : 1840;
+      const threatLevel = isLockdown ? 'CRITICAL DEFCON 1' : 'ELEVATED DEFCON 3';
+
+      useEffect(() => {
+        const interval = setInterval(() => {
+          const isZombie = isLockdown ? Math.random() > 0.15 : Math.random() > 0.45;
+          const isCCTVAttempt = !isZombie && Math.random() > 0.6;
+          
+          let newEvent;
+          if (isZombie) {
+            newEvent = {
+              id: Date.now().toString(),
+              timestamp: new Date().toLocaleTimeString('en-US', { hour12: false }),
+              source: '192.168.66.10 (Zombie 1)',
+              destination: Math.random() > 0.5 ? '192.168.40.10 (Research Server)' : '192.168.60.2 (WEB&DHCP)',
+              protocol: isLockdown ? 'SYN-FLOOD' : 'TCP',
+              action: 'DENIED',
+              severity: 'CRITICAL',
+              rule: 'ACL ext ZOMBIE-CONTAINMENT'
+            };
+          } else if (isCCTVAttempt) {
+            newEvent = {
+              id: Date.now().toString(),
+              timestamp: new Date().toLocaleTimeString('en-US', { hour12: false }),
+              source: '192.168.10.15 (PC-SUR1)',
+              destination: '192.168.50.10 (CAM1)',
+              protocol: 'RTSP',
+              action: 'DENIED',
+              severity: 'HIGH',
+              rule: 'ACL std POLICE-ONLY'
+            };
+          } else {
+            newEvent = {
+              id: Date.now().toString(),
+              timestamp: new Date().toLocaleTimeString('en-US', { hour12: false }),
+              source: '192.168.30.12 (PC-POL1)',
+              destination: '192.168.50.10 (CAM1)',
+              protocol: 'RTSP',
+              action: isLockdown ? 'THROTTLED' : 'ALLOWED',
+              severity: 'LOW',
+              rule: 'ACL std POLICE-ONLY (Permit)'
+            };
+          }
+
+          setLogs(prev => [newEvent, ...prev.slice(0, 11)]);
+        }, isLockdown ? 1600 : 3800);
+        return () => clearInterval(interval);
+      }, [isLockdown]);
+
+      const triggerZombieSim = () => {
+        setSimStep(1);
+        setSimResult(null);
+        setTimeout(() => setSimStep(2), 700);
+        setTimeout(() => {
+          setSimStep(3);
+          setSimResult('BLOCKED');
+        }, 1400);
+      };
+
+      const handleIncidentStart = () => {
+        setIsIncidentActive(true);
+        setActiveDiagStep(1);
+        setTerminalOutput([
+          '*** RED ALERT: QUARANTINE PERIMETER SEVERED ***',
+          '%LINK-3-UPDOWN: Interface FastEthernet0/2 (Trunk to SW-H Hospital), changed state to down',
+          '%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/2, changed state to down',
+          '%OSPF-5-ADJCHG: Process 1, Nbr 192.168.20.1 on Fa0/2 from FULL to DOWN, Neighbor Down',
+          'EMERGENCY: Field Hospital telemetry (192.168.20.0/24) offline. Initiate Tier-2 diagnostics.'
+        ]);
+      };
+
+      const handleRestoreNetwork = () => {
+        setIsIncidentActive(false);
+        setActiveDiagStep(0);
+        setTerminalOutput([
+          'SW-CORE# configure terminal',
+          'SW-CORE(config)# interface FastEthernet0/2',
+          'SW-CORE(config-if)# shutdown',
+          'SW-CORE(config-if)# no shutdown',
+          '%LINK-3-UPDOWN: Interface FastEthernet0/2, changed state to up',
+          '%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/2, changed state to up',
+          '%OSPF-5-ADJCHG: Process 1, Nbr 192.168.20.1 on Fa0/2 from LOADING to FULL, Loading Done',
+          'SW-CORE# ping 192.168.20.1',
+          'Sending 5, 100-byte ICMP Echos to 192.168.20.1:\n!!!!!\nSuccess rate is 100 percent (5/5), round-trip = 1/2/4 ms',
+          'SECTOR SECURED: SW-CORE Fa0/2 trunk restored and Hospital VLAN operational.'
+        ]);
+      };
+
+      const troubleshootingSteps = [
+        { title: 'Check SW-CORE Trunk Ports', cmd: 'show interfaces trunk', output: 'Port Fa0/2: down | Port Fa0/3, Fa0/5, Fa0/6, Fa0/7, Fa0/8, Fa0/10: Mode on, 802.1q Trunking' },
+        { title: 'Check VLAN Database', cmd: 'show vlan brief', output: 'VLAN 10, 20, 30, 40, 50, 60, 666 active. Fa0/2 line protocol down.' },
+        { title: 'Verify OSPF Route to Hospital', cmd: 'show ip route', output: 'O 192.168.20.0/24 is unreachable (Dead timer expired for SW-H link)' },
+        { title: 'Review ACL ext ZOMBIE-CONTAINMENT', cmd: 'show access-lists ZOMBIE-CONTAINMENT', output: 'Extended IP access list ZOMBIE-CONTAINMENT\n 10 deny ip 192.168.66.0 0.0.0.255 192.168.20.0 0.0.0.255 (4,120 matches)\n 20 deny ip 192.168.66.0 0.0.0.255 192.168.40.0 0.0.0.255 (2,840 matches)\n 30 deny ip 192.168.66.0 0.0.0.255 192.168.60.0 0.0.0.255 (3,910 matches)\n 40 permit ip 192.168.66.0 0.0.0.255 any' },
+        { title: 'Review ACL std POLICE-ONLY', cmd: 'show access-lists POLICE-ONLY', output: 'Standard IP access list POLICE-ONLY\n 10 permit 192.168.30.0 0.0.0.255 (Police Only)\n 20 deny any (All Other VLANs Dropped)' },
+        { title: 'Ping Hospital Gateway', cmd: 'ping 192.168.20.1 timeout 1', output: 'Sending 5, 100-byte ICMP Echos to 192.168.20.1:\n.....\nSuccess rate is 0 percent (0/5)' }
+      ];
+
+      const runDiagCmd = (idx) => {
+        setActiveDiagStep(idx + 1);
+        setTerminalOutput(prev => [...prev, `\nSW-CORE# ${troubleshootingSteps[idx].cmd}`, troubleshootingSteps[idx].output]);
+      };
+
+      const trafficData = useMemo(() => {
+        if (isLockdown) {
+          return [
+            { time: '12:00', totalTraffic: 95, blockedThreats: 580 },
+            { time: '12:05', totalTraffic: 80, blockedThreats: 820 },
+            { time: '12:10', totalTraffic: 65, blockedThreats: 1140 },
+            { time: '12:15', totalTraffic: 55, blockedThreats: 990 },
+            { time: '12:20', totalTraffic: 45, blockedThreats: 1350 },
+            { time: '12:25', totalTraffic: 40, blockedThreats: 1180 },
+            { time: '12:30', totalTraffic: 35, blockedThreats: 1540 },
+          ];
+        }
+        return [
+          { time: '12:00', totalTraffic: 180, blockedThreats: 65 },
+          { time: '12:05', totalTraffic: 210, blockedThreats: 90 },
+          { time: '12:10', totalTraffic: 290, blockedThreats: 180 },
+          { time: '12:15', totalTraffic: 240, blockedThreats: 110 },
+          { time: '12:20', totalTraffic: 320, blockedThreats: 230 },
+          { time: '12:25', totalTraffic: 280, blockedThreats: 140 },
+          { time: '12:30', totalTraffic: 350, blockedThreats: 260 },
+        ];
+      }, [isLockdown]);
+
+      const departmentBandwidth = useMemo(() => {
+        if (isLockdown) {
+          return [
+            { name: 'VLAN 10 Survivors', load: 15 },
+            { name: 'VLAN 20 Hospital', load: isIncidentActive ? 8 : 40 },
+            { name: 'VLAN 30 Police', load: 180 },
+            { name: 'VLAN 40 Research', load: 65 },
+            { name: 'VLAN 50 CCTV', load: 220 },
+            { name: 'VLAN 60 Servers', load: 80 },
+            { name: 'VLAN 666 (Drops)', load: 520 },
+          ];
+        }
+        return [
+          { name: 'VLAN 10 Survivors', load: 85 },
+          { name: 'VLAN 20 Hospital', load: isIncidentActive ? 12 : 55 },
+          { name: 'VLAN 30 Police', load: 95 },
+          { name: 'VLAN 40 Research', load: 45 },
+          { name: 'VLAN 50 CCTV', load: 140 },
+          { name: 'VLAN 60 Servers', load: 110 },
+          { name: 'VLAN 666 (Drops)', load: 240 },
+        ];
+      }, [isLockdown, isIncidentActive]);
+
+      const protocolDistribution = useMemo(() => {
+        if (isLockdown) {
+          return [
+            { name: 'Hostile Drops (ACL Ext/Std)', value: 62, color: '#ef4444' },
+            { name: 'RTSP (CCTV CAM1-3)', value: 20, color: '#eab308' },
+            { name: 'Medical/Bio Sync', value: 10, color: '#22c55e' },
+            { name: 'SSH (Admin)', value: 6, color: '#a855f7' },
+            { name: 'HTTP (Web/DHCP)', value: 2, color: '#f97316' },
+          ];
+        }
+        return [
+          { name: 'RTSP (CCTV CAM1-3)', value: 34, color: '#eab308' },
+          { name: 'Hostile Drops (ACL Ext/Std)', value: 26, color: '#ef4444' },
+          { name: 'HTTP (Web/DHCP Server)', value: 20, color: '#f97316' },
+          { name: 'DNS & FTP Protocol', value: 14, color: '#22c55e' },
+          { name: 'SSH Remote Admin', value: 6, color: '#a855f7' },
+        ];
+      }, [isLockdown]);
+
+      const slides = [
+        { 
+          step: '01', 
+          title: 'SURVIVORLAN Post-Apocalypse Network', 
+          subtitle: 'Packet Tracer Topology & Core Structure', 
+          points: [
+            'Hierarchical municipal network centered around 3560 Multilayer SW-CORE and ISR4331 Edge Routers (R1/R0).',
+            'Point-to-Point core routed link: 192.168.100.0/30 (R1 G0/0/1 to SW-CORE Fa0/1) with Serial Se0/2/0 to WAN R0.',
+            '7 Distinct VLAN segments (VLAN 10, 20, 30, 40, 50, 60, 666) running on 192.168.x.0/24 addressing.'
+          ], 
+          diagram: 'WAN R0 (Se0/2/0) → R1 (192.168.100.1) → SW-CORE (192.168.100.2) → 7 VLAN Trunks' 
+        },
+        { 
+          step: '02', 
+          title: 'VLAN Segmentation & Switch Fabric', 
+          subtitle: 'Inter-VLAN SVI Routing Matrix', 
+          points: [
+            'SW-CORE acts as the default gateway for all subnets: 192.168.10.1 through 192.168.66.1.',
+            'Police (VLAN 30) possesses unrestricted universal access to all municipal VLANs, CCTV, servers, and Zombie sector.',
+            'All clean internal sectors (10, 20, 40, 60) have full mutual access including monitoring Zombie VLAN 666, isolated only from CCTV.'
+          ], 
+          diagram: 'Police (VLAN 30) ↔ ALL SECTORS | Clean VLANs ↔ All Internal + Zombie 666' 
+        },
+        { 
+          step: '03', 
+          title: 'ACL ext ZOMBIE-CONTAINMENT', 
+          subtitle: 'Hardware Drop Policy for VLAN 666', 
+          points: [
+            'Extended ACL applied at SW-CORE drops hostile traffic from 192.168.66.0/24 directly in hardware:',
+            'zombie => hospital deny 192.168.66.0 0.0.0.255 192.168.20.0 0.0.0.255',
+            'zombie => research deny 192.168.66.0 0.0.0.255 192.168.40.0 0.0.0.255',
+            'zombie => servers deny 192.168.66.0 0.0.0.255 192.168.60.0 0.0.0.255',
+            'all => zombie permit 192.168.66.0 0.0.0.255 any (Clean internal sectors can access Zombie nodes)'
+          ], 
+          diagram: '192.168.66.0/24 (Zombies) → [ACL ext ZOMBIE-CONTAINMENT] → EXPLICIT DROP (0.00ms)' 
+        },
+        { 
+          step: '04', 
+          title: 'ACL std POLICE-ONLY: CCTV Perimeter Protection', 
+          subtitle: 'Exclusive Police Surveillance Authorization', 
+          points: [
+            'CCTV Network (VLAN 50 - 192.168.50.0/24) houses CAM1, CAM2, CAM3, and CCT SERVER.',
+            'permit vlan30 => vlan50 192.168.30.0 0.0.0.255 (Police Only)',
+            'deny any => vlan50 (Survivors 10, Hospital 20, Research 40, Servers 60, Zombies 666 Dropped)'
+          ], 
+          diagram: '192.168.30.0/24 (Police) → [PERMIT] → CAM1/2/3 | Others → [DENY ANY]' 
+        },
+        { 
+          step: '05', 
+          title: 'Core Server Farm (VLAN 60)', 
+          subtitle: 'Centralized Disaster Services', 
+          points: [
+            'Dedicated server farm on 192.168.60.0/24 connected to SW-SRV (Fa0/5 to Core Fa0/7).',
+            'WEB SERVER & DHCP: Municipal emergency broadcast & dynamic IP lease pool.',
+            'DNS SERVER, FTP SERVER, and MAIL SERVER: Critical tactical communication and data exchange.'
+          ], 
+          diagram: 'VLAN 60 → Web & DHCP (Fa0/1), DNS (Fa0/2), FTP (Fa0/3), Mail (Fa0/4)' 
+        },
+        { 
+          step: '06', 
+          title: 'Troubleshooting: Link Failure Remediation', 
+          subtitle: 'OSPF Adjacency & Trunk Diagnostics', 
+          points: [
+            'Demonstrating incident response when SW-CORE Fa0/2 (Hospital Trunk) goes down.',
+            'Diagnostic sequence: show interfaces trunk, show ip route, show access-lists, ping 192.168.20.1.',
+            'Executing interface shutdown / no shutdown cycle to re-converge OSPF in area 0.'
+          ], 
+          diagram: 'Link Drop on Fa0/2 → OSPF Down → Port Reset → 100% Ping Success' 
+        },
+        { 
+          step: '07', 
+          title: 'Validated Topology & Presentation Ready', 
+          subtitle: 'End-to-End Connectivity & Security', 
+          points: [
+            'Full alignment between Packet Tracer implementation and Interactive Web Dashboard.',
+            'Secure SSHv2 remote management enabled across all switches and routers (admin / Cisco123!).',
+            'SURVIVORLAN is verified and ready for live evaluation and defense.'
+          ], 
+          diagram: 'SURVIVORLAN TOPOLOGY 100% OPERATIONAL & VERIFIED' 
+        }
+      ];
+
+      return (
+        <div className={`min-h-screen bg-apocalypse-950 text-slate-200 font-sans pb-12 transition-colors duration-500 ${isLockdown ? 'ring-4 ring-inset ring-hazard-blood/30' : ''}`}>
+          
+          {/* Top Navbar */}
+          <nav className="fixed top-0 left-0 right-0 z-50 bg-apocalypse-950/95 backdrop-blur border-b border-apocalypse-750 px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-2xl">
+            <div className="flex items-center space-x-3">
+              <div className={`w-9 h-9 rounded-lg bg-apocalypse-850 border flex items-center justify-center font-mono font-bold tracking-wider transition-all ${
+                isLockdown ? 'border-hazard-blood text-hazard-blood animate-bounce' : 'border-hazard-yellow/40 text-hazard-yellow'
+              }`}>
+                ☣
+              </div>
+              <div>
+                <div className="flex items-center space-x-2">
+                  <span className="font-mono text-sm tracking-wider font-bold text-white">SURVIVOR<span className={isLockdown ? 'text-hazard-blood' : 'text-hazard-yellow'}>LAN</span></span>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono border ${
+                    isLockdown ? 'bg-hazard-blood/20 text-hazard-blood border-hazard-blood/60 animate-pulse' : 'bg-apocalypse-800 text-hazard-amber border-apocalypse-700'
+                  }`}>
+                    {isLockdown ? 'DEFCON 1 LOCKDOWN' : 'PACKET TRACER NOC'}
+                  </span>
+                </div>
+                <p className="text-[11px] text-gray-400">192.168.0.0/24 Multi-VLAN Defense Infrastructure</p>
+              </div>
+            </div>
+
+            <div className="hidden lg:flex items-center space-x-2 text-xs font-mono text-gray-300">
+              <a href="#overview" className="px-2.5 py-1.5 hover:text-hazard-yellow hover:bg-apocalypse-850 rounded transition-colors">OVERVIEW</a>
+              <a href="#architecture" className="px-2.5 py-1.5 hover:text-hazard-yellow hover:bg-apocalypse-850 rounded transition-colors">TOPOLOGY</a>
+              <a href="#vlans" className="px-2.5 py-1.5 hover:text-hazard-yellow hover:bg-apocalypse-850 rounded transition-colors">VLANS</a>
+              <a href="#security" className="px-2.5 py-1.5 hover:text-hazard-yellow hover:bg-apocalypse-850 rounded transition-colors">ACL DEFENSE</a>
+              <a href="#departments" className="px-2.5 py-1.5 hover:text-hazard-yellow hover:bg-apocalypse-850 rounded transition-colors">SECTORS</a>
+              <a href="#tech" className="px-2.5 py-1.5 hover:text-hazard-yellow hover:bg-apocalypse-850 rounded transition-colors">TECH STACK</a>
+              <a href="#traffic" className="px-2.5 py-1.5 hover:text-hazard-yellow hover:bg-apocalypse-850 rounded transition-colors">TRAFFIC NOC</a>
+              <a href="#simulator" className="px-2.5 py-1.5 hover:text-hazard-yellow hover:bg-apocalypse-850 rounded transition-colors">INCIDENT LAB</a>
+              <a href="#team" className="px-2.5 py-1.5 hover:text-hazard-yellow hover:bg-apocalypse-850 rounded transition-colors">TEAM</a>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={() => setIsLockdown(!isLockdown)}
+                className={`px-3 py-1.5 text-xs font-mono rounded border transition-all ${
+                  isLockdown 
+                    ? 'bg-hazard-blood text-white border-hazard-blood shadow-lg shadow-hazard-blood/40 animate-pulse font-bold'
+                    : 'bg-apocalypse-850 text-gray-300 border-apocalypse-700 hover:text-hazard-blood hover:border-hazard-blood/50'
+                }`}
+              >
+                {isLockdown ? '☣ BIO-LOCKDOWN ENGAGED' : 'QUARANTINE LOCK'}
+              </button>
+
+              <button
+                onClick={() => setIsPresentationOpen(true)}
+                className="px-3.5 py-1.5 text-xs font-mono font-bold bg-hazard-yellow/15 hover:bg-hazard-yellow/25 text-hazard-yellow border border-hazard-yellow/40 rounded transition-all shadow-sm"
+              >
+                PRESENTATION MODE
+              </button>
+            </div>
+          </nav>
+
+          {/* Section 1: Hero & KPIs */}
+          <section id="overview" className="pt-24 pb-8 px-4 sm:px-8 max-w-7xl mx-auto">
+            <div className={`p-6 md:p-10 rounded-2xl bg-gradient-to-b border shadow-2xl flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 transition-all duration-500 ${
+              isLockdown 
+                ? 'from-red-950/40 via-apocalypse-900 to-apocalypse-950 border-hazard-blood/60' 
+                : 'from-apocalypse-850 via-apocalypse-900 to-apocalypse-950 border-apocalypse-750'
+            }`}>
+              <div className="max-w-3xl space-y-2.5">
+                <div className={`inline-flex items-center space-x-2 px-3 py-0.5 rounded-full text-xs font-mono border ${
+                  isLockdown ? 'bg-hazard-blood/20 border-hazard-blood/50 text-hazard-blood animate-pulse' : 'bg-hazard-yellow/10 border-hazard-yellow/30 text-hazard-yellow'
+                }`}>
+                  <span className={`w-2 h-2 rounded-full ${isLockdown ? 'bg-hazard-blood' : 'bg-hazard-yellow'} animate-ping`}></span>
+                  <span>{isLockdown ? 'QUARANTINE LOCKDOWN ACTIVE — ZERO TRUST TCAM ENFORCED' : 'TOPOLOGY-ACCURATE NOC / SOC SIMULATION'}</span>
+                </div>
+                <h1 className="text-3xl sm:text-5xl font-extrabold font-mono text-white tracking-tight">
+                  SURVIVOR<span className={isLockdown ? 'text-hazard-blood' : 'text-hazard-yellow'}>LAN</span>
+                  <span className="block text-xl text-gray-400 font-sans font-normal mt-1">
+                    Quarantine Survival Network — Cisco Packet Tracer Architecture
+                  </span>
+                </h1>
+                <p className="text-sm text-gray-300 leading-relaxed max-w-2xl font-sans">
+                  Visualizing the 192.168.0.0/24 municipal disaster infrastructure. 
+                  Demonstrating 3560 Multilayer SW-CORE SVI routing, Extended ACL ZOMBIE-CONTAINMENT drops, Standard ACL POLICE-ONLY CCTV protection, and unrestricted Police traversal across the municipal perimeter.
+                </p>
+              </div>
+
+              <div className={`p-4 rounded-xl bg-apocalypse-950 border min-w-[240px] font-mono text-xs space-y-2 ${
+                isLockdown ? 'border-hazard-blood/60 shadow-lg shadow-hazard-blood/20' : 'border-apocalypse-700'
+              }`}>
+                <div className="flex justify-between text-gray-400">
+                  <span>CORE LINK (R1-SW):</span>
+                  <span className="text-hazard-yellow">192.168.100.0/30</span>
+                </div>
+                <div className="flex justify-between text-gray-400">
+                  <span>SW-CORE (3560):</span>
+                  <span className={isLockdown ? 'text-hazard-blood font-bold animate-pulse' : 'text-hazard-bio'}>
+                    {isLockdown ? 'TCAM PURGE ACTIVE' : 'ONLINE (7 SVIs UP)'}
+                  </span>
+                </div>
+                <div className="flex justify-between text-gray-400">
+                  <span>ZOMBIE ISOLATION:</span>
+                  <span className="text-hazard-blood font-bold">192.168.66.0/24 DROPPED</span>
+                </div>
+              </div>
+            </div>
+
+            {/* KPI Metrics */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5 mt-6 font-mono">
+              <div className={`p-4 rounded-xl bg-apocalypse-900 border shadow transition-all ${isLockdown ? 'border-hazard-blood/50 bg-red-950/20' : 'border-apocalypse-750'}`}>
+                <div className="text-xs text-gray-400">NETWORK STATUS</div>
+                <div className={`text-lg font-bold mt-1 ${isIncidentActive ? 'text-hazard-orange animate-pulse' : isLockdown ? 'text-hazard-blood animate-pulse' : 'text-hazard-bio'}`}>
+                  {isIncidentActive ? 'DEGRADED / BREACH' : isLockdown ? 'FULL LOCKDOWN' : 'OPERATIONAL'}
+                </div>
+              </div>
+
+              <div className="p-4 rounded-xl bg-apocalypse-900 border border-apocalypse-750 shadow">
+                <div className="text-xs text-gray-400">ACTIVE SEGMENTS</div>
+                <div className="text-lg font-bold text-white mt-1">7 VLANs (802.1Q)</div>
+              </div>
+
+              <div className="p-4 rounded-xl bg-apocalypse-900 border border-apocalypse-750 shadow">
+                <div className="text-xs text-gray-400">SECURITY POSTURE</div>
+                <div className={`text-lg font-bold mt-1 ${isLockdown ? 'text-hazard-blood font-extrabold' : 'text-hazard-bio'}`}>
+                  {isLockdown ? 'DEFCON 1 SEALED' : 'ACL ENFORCED'}
+                </div>
+              </div>
+
+              <div className="p-4 rounded-xl bg-apocalypse-900 border border-apocalypse-750 shadow">
+                <div className="text-xs text-gray-400">THREAT DEFCON</div>
+                <div className={`text-base font-bold mt-1 ${threatLevel.includes('1') ? 'text-hazard-blood animate-pulse' : 'text-hazard-amber'}`}>
+                  {threatLevel}
+                </div>
+              </div>
+
+              <div className={`p-4 rounded-xl bg-apocalypse-900 border shadow col-span-2 sm:col-span-1 transition-all ${
+                isLockdown ? 'border-hazard-blood bg-red-950/30' : 'border-apocalypse-750'
+              }`}>
+                <div className="text-xs text-gray-400">BLOCKED INTRUSIONS</div>
+                <div className="text-lg font-bold text-hazard-blood mt-1 flex items-center gap-1.5">
+                  <span>{blockedCount.toLocaleString()}</span>
+                  {isLockdown && <span className="text-[10px] text-hazard-blood animate-ping">▲ HIGH</span>}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Section 2: Network Architecture Topology */}
+          <section id="architecture" className="py-8 px-4 sm:px-8 max-w-7xl mx-auto">
+            <div className="mb-4">
+              <span className="text-hazard-yellow font-mono text-xs uppercase tracking-wider">Exact Topology Map</span>
+              <h2 className="text-2xl sm:text-3xl font-bold font-mono text-white">Quarantine Network Topology & Port Mapping</h2>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <div className="lg:col-span-7 bg-apocalypse-900 border border-apocalypse-750 rounded-xl p-5 shadow flex flex-col justify-between">
+                <div className="text-xs font-mono text-gray-400 pb-3 border-b border-apocalypse-800 flex justify-between">
+                  <span>CISCO PACKET TRACER TOPOLOGY VIEW</span>
+                  <span className={isLockdown ? 'text-hazard-blood font-bold' : 'text-hazard-yellow'}>
+                    {isLockdown ? 'INGRESS SINKHOLE ACTIVE' : 'ALL TRUNK PORTS UP'}
+                  </span>
+                </div>
+
+                <div className="py-6 flex flex-col items-center space-y-3 font-mono">
+                  {/* WAN Edge R0 */}
+                  <div className="px-4 py-1.5 rounded bg-apocalypse-850 border border-apocalypse-700 text-xs text-gray-300 flex items-center gap-2">
+                    <span>WAN ROUTER (ISR4331 R0)</span>
+                    <span className="text-[10px] text-hazard-orange">Se0/2/0 Serial</span>
+                  </div>
+
+                  <div className="w-0.5 h-3 bg-red-500"></div>
+
+                  {/* Router R1 */}
+                  <div className="w-full max-w-md p-2.5 rounded bg-apocalypse-850 border border-hazard-yellow/40 flex justify-between items-center text-xs">
+                    <div>
+                      <div className="font-bold text-white">EDGE ROUTER (ISR4331 R1)</div>
+                      <div className="text-[10px] text-gray-400">Se0/2/0 Serial ↔ Gig0/0/1 (192.168.100.1/30)</div>
+                    </div>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-hazard-bio/10 text-hazard-bio border border-hazard-bio/30">OSPF R1</span>
+                  </div>
+
+                  <div className="w-0.5 h-3 bg-hazard-yellow"></div>
+
+                  {/* Core Switch */}
+                  <div className="w-full max-w-lg p-3 rounded bg-apocalypse-850 border border-hazard-orange/40 flex justify-between items-center text-xs">
+                    <div>
+                      <div className="font-bold text-white">MULTILAYER CORE SWITCH (SW-CORE)</div>
+                      <div className="text-[10px] text-gray-400">Fa0/1: 192.168.100.2/30 • 7 SVIs (192.168.10.1 - 66.1)</div>
+                    </div>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-hazard-orange/10 text-hazard-orange border border-hazard-orange/30">3560 SVI</span>
+                  </div>
+
+                  <div className="w-full h-0.5 bg-gradient-to-r from-amber-500 via-orange-500 to-red-600 mt-2"></div>
+
+                  {/* 7 Segment Trunks Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 w-full pt-2">
+                    {Object.values(vlansData).map(v => (
+                      <button
+                        key={v.id}
+                        onClick={() => setSelectedVlanId(v.id)}
+                        className={`p-2 rounded text-left border text-xs transition-all ${
+                          selectedVlan.id === v.id ? 'ring-2 ring-hazard-yellow scale-102 bg-apocalypse-800' : 'bg-apocalypse-850 border-apocalypse-750 opacity-85 hover:opacity-100'
+                        } ${v.id === 666 ? 'border-hazard-blood bg-hazard-blood/10 text-red-300 font-bold' : v.id === 30 ? 'border-hazard-bio bg-hazard-bio/10 text-emerald-300' : 'text-gray-200'}`}
+                      >
+                        <div className="font-bold flex justify-between">
+                          <span>{v.name}</span>
+                          <span className="text-[9px] text-gray-400">{v.corePort.split(' ')[1]}</span>
+                        </div>
+                        <div className="text-[10px] text-gray-400 truncate">{v.department}</div>
+                        <div className="text-[9px] text-hazard-yellow font-mono">{v.subnet}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="text-[11px] font-mono text-gray-400 bg-apocalypse-950 p-2 rounded border border-apocalypse-800 flex justify-between">
+                  <span>SSH ADMIN: admin / Cisco123!</span>
+                  <span className="text-hazard-yellow">RSA 1024-bit ENCRYPTED</span>
+                </div>
+              </div>
+
+              {/* Node Details Panel */}
+              <div className="lg:col-span-5 bg-apocalypse-900 border border-apocalypse-750 rounded-xl p-5 shadow flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between pb-3 border-b border-apocalypse-800">
+                    <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-hazard-yellow/15 text-hazard-yellow border border-hazard-yellow/30">
+                      {selectedVlan.name} — {selectedVlan.department}
+                    </span>
+                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded ${
+                      selectedVlan.id === 666 ? 'bg-hazard-blood/20 text-hazard-blood border border-hazard-blood/40' : selectedVlan.id === 30 ? 'bg-hazard-bio/20 text-hazard-bio border border-hazard-bio/40 font-bold' : 'bg-hazard-bio/10 text-hazard-bio border border-hazard-bio/30'
+                    }`}>
+                      {selectedVlan.status}
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-gray-300 my-3 leading-relaxed bg-apocalypse-850 p-3 rounded border border-apocalypse-750">
+                    {selectedVlan.description}
+                  </p>
+
+                  <div className="space-y-1.5 font-mono text-xs">
+                    <div className="flex justify-between p-2 rounded bg-apocalypse-950 border border-apocalypse-800">
+                      <span className="text-gray-400">Subnet Scope:</span>
+                      <span className="text-white font-bold">{selectedVlan.subnet}</span>
+                    </div>
+                    <div className="flex justify-between p-2 rounded bg-apocalypse-950 border border-apocalypse-800">
+                      <span className="text-gray-400">Default SVI Gateway:</span>
+                      <span className="text-hazard-yellow">{selectedVlan.gateway}</span>
+                    </div>
+                    <div className="flex justify-between p-2 rounded bg-apocalypse-950 border border-apocalypse-800">
+                      <span className="text-gray-400">Switch & Trunk Port:</span>
+                      <span className="text-gray-200">{selectedVlan.corePort} ↔ {selectedVlan.switchName}</span>
+                    </div>
+                    <div className="flex justify-between p-2 rounded bg-apocalypse-950 border border-apocalypse-800">
+                      <span className="text-gray-400">Endpoints in Topology:</span>
+                      <span className="text-gray-200">{selectedVlan.devicesList}</span>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 space-y-2">
+                    <div className="text-[11px] font-mono text-hazard-bio font-bold">Authorized Flows (Inter-VLAN Access):</div>
+                    {selectedVlan.allowedConnections.map((c, i) => (
+                      <div key={i} className="text-xs font-mono text-hazard-bio bg-hazard-bio/5 border border-hazard-bio/20 px-2 py-0.5 rounded">
+                        + {c}
+                      </div>
+                    ))}
+                    <div className="text-[11px] font-mono text-hazard-blood font-bold mt-2">Explicitly Blocked (ACL Drops):</div>
+                    {selectedVlan.blockedConnections.map((c, i) => (
+                      <div key={i} className="text-xs font-mono text-hazard-blood bg-hazard-blood/5 border border-hazard-blood/20 px-2 py-0.5 rounded">
+                        - {c}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-2 border-t border-apocalypse-800 text-[11px] font-mono text-gray-400 flex justify-between">
+                  <span>ENFORCEMENT:</span>
+                  <span className="text-hazard-yellow">{selectedVlan.id === 50 ? 'ACL std POLICE-ONLY on SW-CCT' : selectedVlan.id === 666 ? 'ACL ext ZOMBIE-CONTAINMENT on SW-CORE' : selectedVlan.id === 30 ? 'Unrestricted Inter-VLAN Routing' : 'Inter-VLAN Routing (Isolated from CCTV)'}</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Section 3: VLANs Matrix */}
+          <section id="vlans" className="py-8 px-4 sm:px-8 max-w-7xl mx-auto">
+            <div className="mb-4">
+              <span className="text-hazard-orange font-mono text-xs uppercase tracking-wider">Topology Addressing Matrix</span>
+              <h2 className="text-2xl sm:text-3xl font-bold font-mono text-white">VLAN Segmentation & IP Allocation Matrix</h2>
+            </div>
+
+            <div className="overflow-x-auto rounded-xl border border-apocalypse-750 bg-apocalypse-900 shadow">
+              <table className="w-full text-left text-xs font-mono">
+                <thead className="bg-apocalypse-850 text-gray-300 uppercase text-[10px] border-b border-apocalypse-750">
+                  <tr>
+                    <th className="px-4 py-3">VLAN ID</th>
+                    <th className="px-4 py-3">Sector</th>
+                    <th className="px-4 py-3">Subnet</th>
+                    <th className="px-4 py-3">Default Gateway</th>
+                    <th className="px-4 py-3">Core Port</th>
+                    <th className="px-4 py-3">Switch & Devices</th>
+                    <th className="px-4 py-3">ACL Policy</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-apocalypse-800 text-gray-300">
+                  {Object.values(vlansData).map(v => (
+                    <tr key={v.id} className="hover:bg-apocalypse-850/50">
+                      <td className="px-4 py-3 font-bold text-white">
+                        <span className={`px-2 py-0.5 rounded ${v.id === 666 ? 'bg-hazard-blood/20 text-red-300 border border-hazard-blood/40' : v.id === 30 ? 'bg-hazard-bio/20 text-emerald-300 border border-hazard-bio/40' : 'bg-apocalypse-800 text-hazard-yellow'}`}>
+                          VLAN {v.id}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 font-sans font-medium text-white">{v.department}</td>
+                      <td className="px-4 py-3 text-hazard-yellow">{v.subnet}</td>
+                      <td className="px-4 py-3">{v.gateway}</td>
+                      <td className="px-4 py-3 text-gray-400">{v.corePort.split(' ')[1]}</td>
+                      <td className="px-4 py-3 text-[11px] text-gray-300 truncate max-w-xs">{v.devicesList}</td>
+                      <td className="px-4 py-3 text-[11px]">
+                        {v.id === 666 ? (
+                          <span className="text-hazard-blood font-bold">ACL ext ZOMBIE-CONTAINMENT (Deny 20,40,60)</span>
+                        ) : v.id === 50 ? (
+                          <span className="text-hazard-yellow">ACL std POLICE-ONLY (Permit 30 Only)</span>
+                        ) : v.id === 30 ? (
+                          <span className="text-hazard-bio font-bold">Full Access to All VLANs</span>
+                        ) : (
+                          <span className="text-hazard-bio">Inter-VLAN (All except CCTV 50)</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          {/* Section 4: Security & ACL Simulation */}
+          <section id="security" className="py-8 px-4 sm:px-8 max-w-7xl mx-auto">
+            <div className="mb-4">
+              <span className="text-hazard-blood font-mono text-xs uppercase tracking-wider">ACL Rule Verification</span>
+              <h2 className="text-2xl sm:text-3xl font-bold font-mono text-white">Extended & Standard ACL Enforcement Test</h2>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <div className="lg:col-span-5 bg-apocalypse-900 border border-apocalypse-750 rounded-xl p-5 shadow flex flex-col justify-between">
+                <div>
+                  <div className="text-xs font-mono font-bold text-white pb-3 border-b border-apocalypse-800">
+                    HOSTILE PACKET INGRESS BENCH (VLAN 666)
+                  </div>
+                  <p className="text-xs text-gray-300 my-3 font-sans">
+                    Inject a simulated hostile packet from Zombie 1 (192.168.66.10) targeting the Research Server (192.168.40.10) to verify ACL ext ZOMBIE-CONTAINMENT rule:
+                    <span className="block font-mono text-hazard-orange mt-1">`zombie = research deny 192.168.66.0 0.0.0.255 192.168.40.0 0.0.0.255`</span>
+                  </p>
+
+                  <div className="p-3.5 rounded bg-apocalypse-950 border border-apocalypse-800 space-y-3 font-mono text-xs my-3">
+                    <div className={`p-2.5 rounded border ${simStep >= 1 ? 'border-hazard-blood bg-hazard-blood/10 text-white' : 'border-apocalypse-800 text-gray-400'}`}>
+                      SOURCE: PC-PT ZOMBIE 1 (192.168.66.10 on SW-CORE Fa0/10)
+                    </div>
+                    <div className="text-center text-[10px] text-gray-400">↓ PACKET INGRESS TO SW-CORE TCAM ↓</div>
+                    <div className={`p-2.5 rounded border ${simStep >= 2 ? 'border-hazard-orange bg-hazard-orange/10 text-white' : 'border-apocalypse-800 text-gray-400'}`}>
+                      ACL ext ZOMBIE-CONTAINMENT MATCH: DENY TO 192.168.40.0/24
+                    </div>
+                    <div className="text-center text-[10px] text-gray-400">↓ HARDWARE DROP ACTION ↓</div>
+                    <div className={`p-2.5 rounded border ${simResult ? 'border-hazard-blood bg-hazard-blood/20 text-red-300 font-bold' : 'border-apocalypse-800 text-gray-400'}`}>
+                      {simResult ? 'ACTION: HARDWARE DROP (RESEARCH AIR-GAPPED)' : 'TARGET: 192.168.40.10 (RESEARCH SERVER)'}
+                    </div>
+                  </div>
+
+                  {simResult && (
+                    <div className="p-3 rounded bg-red-950/40 border border-hazard-blood/50 text-red-200 text-xs font-mono">
+                      <div className="font-bold text-hazard-blood">ACCESS DENIED — ACL ext ZOMBIE-CONTAINMENT MATCHED</div>
+                      <div>Source: 192.168.66.10 | Dest: 192.168.40.10 | Packets Dropped: 100%</div>
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  onClick={triggerZombieSim}
+                  disabled={simStep > 0 && simStep < 3}
+                  className="w-full mt-4 py-2.5 px-4 rounded bg-hazard-blood/20 hover:bg-hazard-blood/30 text-hazard-blood border border-hazard-blood/40 font-mono text-xs font-bold transition-all shadow"
+                >
+                  SIMULATE ZOMBIE INTRUSION ATTEMPT
+                </button>
+              </div>
+
+              <div className="lg:col-span-7 bg-apocalypse-900 border border-apocalypse-750 rounded-xl p-5 shadow flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between pb-3 border-b border-apocalypse-800">
+                    <span className="text-xs font-mono font-bold text-white">LIVE ACL EVENT LOG (SW-CORE & SW-CCT)</span>
+                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded ${
+                      isLockdown ? 'bg-hazard-blood/20 text-hazard-blood border border-hazard-blood/40 animate-pulse font-bold' : 'text-hazard-bio'
+                    }`}>
+                      {isLockdown ? 'LOCKDOWN STREAM (DEFCON 1)' : 'ACTIVE FLOWS'}
+                    </span>
+                  </div>
+
+                  <div className="overflow-x-auto mt-3">
+                    <table className="w-full text-left text-xs font-mono">
+                      <thead className="bg-apocalypse-950 text-gray-400 uppercase text-[10px] border-b border-apocalypse-800">
+                        <tr>
+                          <th className="px-2.5 py-2">Time</th>
+                          <th className="px-2.5 py-2">Source IP</th>
+                          <th className="px-2.5 py-2">Destination IP</th>
+                          <th className="px-2.5 py-2">Proto</th>
+                          <th className="px-2.5 py-2">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-apocalypse-800/60 text-gray-300">
+                        {logs.map(log => (
+                          <tr key={log.id} className="hover:bg-apocalypse-850/40">
+                            <td className="px-2.5 py-1.5 text-gray-400">{log.timestamp}</td>
+                            <td className="px-2.5 py-1.5 text-white">{log.source}</td>
+                            <td className="px-2.5 py-1.5">{log.destination}</td>
+                            <td className="px-2.5 py-1.5 text-hazard-yellow">{log.protocol}</td>
+                            <td className="px-2.5 py-1.5">
+                              <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                                log.action === 'DENIED' ? 'bg-hazard-blood/20 text-hazard-blood border border-hazard-blood/30' : 'bg-hazard-bio/20 text-hazard-bio border border-hazard-bio/30'
+                              }`}>
+                                {log.action}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div className="mt-3 pt-2 border-t border-apocalypse-800 text-[11px] font-mono text-gray-400 flex justify-between">
+                  <span>SW-CORE & SW-CCT ACL ENGINE:</span>
+                  <span className="text-hazard-yellow">ACL ext ZOMBIE-CONTAINMENT + ACL std POLICE-ONLY</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Section 5: Department Telemetry */}
+          <section id="departments" className="py-8 px-4 sm:px-8 max-w-7xl mx-auto">
+            <div className="mb-4">
+              <span className="text-hazard-yellow font-mono text-xs uppercase tracking-wider">Topology Devices</span>
+              <h2 className="text-2xl sm:text-3xl font-bold font-mono text-white">Department Sectors & Endpoints</h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {Object.values(vlansData).map(dept => {
+                const isHospital = dept.id === 20;
+                const isDegraded = isHospital && isIncidentActive;
+                return (
+                  <div 
+                    key={dept.id}
+                    onClick={() => setSelectedVlanId(dept.id)}
+                    className={`p-4 rounded-xl border transition-all cursor-pointer shadow ${
+                      dept.id === 666
+                        ? 'bg-red-950/20 border-hazard-blood/50 hover:border-hazard-blood'
+                        : isDegraded
+                        ? 'bg-amber-950/20 border-hazard-orange/60 animate-pulse'
+                        : isLockdown && dept.id === 10
+                        ? 'bg-amber-950/10 border-hazard-amber/50'
+                        : 'bg-apocalypse-900 border-apocalypse-750 hover:border-hazard-yellow/40'
+                    }`}
+                  >
+                    <div className="flex justify-between items-center pb-2 border-b border-apocalypse-800">
+                      <span className="text-xs font-mono font-bold text-gray-200">{dept.name}</span>
+                      <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${
+                        isDegraded ? 'bg-hazard-orange/20 text-hazard-orange border-hazard-orange/40' : 
+                        dept.id === 666 ? 'bg-hazard-blood/20 text-hazard-blood border-hazard-blood/40' :
+                        dept.id === 30 ? 'bg-hazard-bio/20 text-emerald-300 border border-hazard-bio/40 font-bold' :
+                        'bg-hazard-bio/20 text-hazard-bio border border-hazard-bio/40'
+                      }`}>
+                        {isDegraded ? 'COMPROMISED' : dept.status}
+                      </span>
+                    </div>
+
+                    <div className="mt-2.5">
+                      <h3 className="text-sm font-bold text-white">{dept.department}</h3>
+                      <p className="text-[11px] text-gray-400 font-mono">{dept.subnet}</p>
+                      <p className="text-[10px] text-hazard-yellow font-mono mt-0.5 truncate">{dept.devicesList}</p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 mt-3 text-[11px] font-mono">
+                      <div className="p-1.5 rounded bg-apocalypse-950 border border-apocalypse-800">
+                        <div className="text-gray-400">Trunk Link</div>
+                        <div className="font-bold text-gray-200 mt-0.5 truncate">{dept.corePort.split(' ')[1]}</div>
+                      </div>
+                      <div className="p-1.5 rounded bg-apocalypse-950 border border-apocalypse-800">
+                        <div className="text-gray-400">Gateway</div>
+                        <div className="font-bold text-hazard-yellow mt-0.5 truncate">{dept.gateway.split('.').slice(2).join('.')}</div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* Section 6: Technology Stack */}
+          <section id="tech" className="py-8 px-4 sm:px-8 max-w-7xl mx-auto">
+            <div className="mb-4">
+              <span className="text-hazard-orange font-mono text-xs uppercase tracking-wider">Configuration Stack</span>
+              <h2 className="text-2xl sm:text-3xl font-bold font-mono text-white">Deployed Cisco Protocols & Services</h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+              {TECH_STACK.map(tech => (
+                <div key={tech.id} className="p-4 rounded-xl bg-apocalypse-900 border border-apocalypse-750 shadow flex flex-col justify-between">
+                  <div>
+                    <div className="flex justify-between items-center pb-2 border-b border-apocalypse-800">
+                      <span className="text-xs font-mono font-bold text-white">{tech.name}</span>
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-hazard-bio/10 text-hazard-bio border border-hazard-bio/30">
+                        {tech.status}
+                      </span>
+                    </div>
+                    <div className="text-[10px] font-mono text-hazard-yellow mt-2">{tech.category}</div>
+                    <p className="text-xs text-gray-300 mt-1 leading-relaxed font-sans">{tech.description}</p>
+                  </div>
+                  <div className="mt-3 pt-2 border-t border-apocalypse-800 text-[10px] font-mono text-gray-400">
+                    CISCO PACKET TRACER READY
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Section 7: Traffic NOC Dashboard */}
+          <section id="traffic" className="py-8 px-4 sm:px-8 max-w-7xl mx-auto">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-2">
+              <div>
+                <span className="text-hazard-yellow font-mono text-xs uppercase tracking-wider">Tactical Telemetry</span>
+                <h2 className="text-2xl sm:text-3xl font-bold font-mono text-white">Bandwidth & Threat Flow NOC</h2>
+              </div>
+              <div className="inline-flex rounded bg-apocalypse-900 border border-apocalypse-750 p-1 font-mono text-xs">
+                {['5m', '1h', '24h'].map(t => (
+                  <button
+                    key={t}
+                    onClick={() => setTimeRange(t)}
+                    className={`px-3 py-1 rounded uppercase ${timeRange === t ? 'bg-hazard-yellow text-black font-bold' : 'text-gray-400'}`}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <div className="lg:col-span-8 bg-apocalypse-900 border border-apocalypse-750 rounded-xl p-5 shadow">
+                <div className="text-xs font-mono font-bold text-white pb-3 border-b border-apocalypse-800 flex justify-between">
+                  <span>THROUGHPUT (Mbps) VS HOSTILE INGRESS DROPS (ACL-EXT)</span>
+                  <span className={isLockdown ? 'text-hazard-blood font-bold' : 'text-hazard-yellow'}>
+                    {isLockdown ? 'LOCKDOWN SINKHOLE METRICS' : 'CORE LINK: 192.168.100.0/30'}
+                  </span>
+                </div>
+                <div className="h-64 w-full mt-3">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={trafficData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#202820" />
+                      <XAxis dataKey="time" stroke="#6b7280" tick={{ fontSize: 11, fontFamily: 'monospace' }} />
+                      <YAxis stroke="#6b7280" tick={{ fontSize: 11, fontFamily: 'monospace' }} />
+                      <Tooltip contentStyle={{ backgroundColor: '#0d100d', borderColor: '#2b352b', fontSize: '11px', fontFamily: 'monospace' }} />
+                      <Area type="monotone" dataKey="totalTraffic" name="Clean Traffic (Mbps)" stroke="#eab308" fill="#eab308" fillOpacity={0.15} strokeWidth={2} />
+                      <Area type="monotone" dataKey="blockedThreats" name="ACL Drops/s" stroke="#ef4444" fill="#ef4444" fillOpacity={0.25} strokeWidth={2} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              <div className="lg:col-span-4 bg-apocalypse-900 border border-apocalypse-750 rounded-xl p-5 shadow flex flex-col justify-between">
+                <div>
+                  <div className="text-xs font-mono font-bold text-white pb-3 border-b border-apocalypse-800">
+                    PROTOCOL MIX
+                  </div>
+                  <div className="h-44 w-full mt-2">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={protocolDistribution} dataKey="value" cx="50%" cy="50%" innerRadius={40} outerRadius={60}>
+                          {protocolDistribution.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip contentStyle={{ backgroundColor: '#0d100d', borderColor: '#2b352b', fontSize: '11px' }} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  <div className="space-y-1 font-mono text-[11px] mt-2">
+                    {protocolDistribution.map(item => (
+                      <div key={item.name} className="flex justify-between text-gray-300">
+                        <span>{item.name}</span>
+                        <span className="font-bold">{item.value}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="lg:col-span-12 bg-apocalypse-900 border border-apocalypse-750 rounded-xl p-5 shadow">
+                <div className="text-xs font-mono font-bold text-white pb-3 border-b border-apocalypse-800">
+                  BANDWIDTH UTILIZATION PER VLAN SUB-INTERFACE (Mbps)
+                </div>
+                <div className="h-52 w-full mt-3">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={departmentBandwidth}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#202820" />
+                      <XAxis dataKey="name" stroke="#6b7280" tick={{ fontSize: 10, fontFamily: 'monospace' }} />
+                      <YAxis stroke="#6b7280" tick={{ fontSize: 11, fontFamily: 'monospace' }} />
+                      <Tooltip contentStyle={{ backgroundColor: '#0d100d', borderColor: '#2b352b', fontSize: '11px' }} />
+                      <Bar dataKey="load" name="Throughput (Mbps)" fill="#f97316" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Section 8: Incident Simulator & Cisco CLI */}
+          <section id="simulator" className="py-8 px-4 sm:px-8 max-w-7xl mx-auto">
+            <div className="mb-4">
+              <span className="text-hazard-orange font-mono text-xs uppercase tracking-wider">Topology Diagnostics</span>
+              <h2 className="text-2xl sm:text-3xl font-bold font-mono text-white">SW-CORE & R1 Incident Simulator</h2>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <div className="lg:col-span-5 bg-apocalypse-900 border border-apocalypse-750 rounded-xl p-5 shadow flex flex-col justify-between font-mono">
+                <div>
+                  <div className="flex justify-between items-center pb-3 border-b border-apocalypse-800">
+                    <span className="text-xs font-bold text-white">SW-CORE TRUNK DIAGNOSTICS</span>
+                    <span className={`text-[10px] px-2 py-0.5 rounded border ${
+                      isIncidentActive ? 'bg-hazard-blood/20 text-hazard-blood border-hazard-blood/50 animate-pulse' : 'bg-hazard-bio/20 text-hazard-bio border-hazard-bio/50'
+                    }`}>
+                      {isIncidentActive ? 'LINK FA0/2 DOWN' : 'SW-CORE HEALTHY'}
+                    </span>
+                  </div>
+
+                  <div className="mt-4">
+                    {!isIncidentActive ? (
+                      <button
+                        onClick={handleIncidentStart}
+                        className="w-full py-2.5 px-4 rounded bg-hazard-orange/20 hover:bg-hazard-orange/30 text-hazard-orange border border-hazard-orange/50 text-xs font-bold transition-all shadow"
+                      >
+                        SIMULATE HOSPITAL TRUNK CUT (SW-CORE Fa0/2)
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleRestoreNetwork}
+                        className="w-full py-2.5 px-4 rounded bg-hazard-bio/20 hover:bg-hazard-bio/30 text-hazard-bio border border-hazard-bio/50 text-xs font-bold transition-all shadow"
+                      >
+                        RESTORE SW-CORE Fa0/2 & RE-CONVERGE OSPF
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="mt-5">
+                    <span className="text-xs text-gray-400 block mb-2">Cisco IOS Diagnostic Steps:</span>
+                    <div className="space-y-1.5">
+                      {troubleshootingSteps.map((step, idx) => (
+                        <button
+                          key={idx}
+                          disabled={!isIncidentActive}
+                          onClick={() => runDiagCmd(idx)}
+                          className={`w-full p-2 rounded text-left border text-xs flex justify-between items-center ${
+                            !isIncidentActive
+                              ? 'opacity-30 cursor-not-allowed border-apocalypse-800 bg-apocalypse-950 text-gray-500'
+                              : activeDiagStep > idx
+                              ? 'border-hazard-bio/50 text-hazard-bio bg-hazard-bio/5'
+                              : 'border-apocalypse-750 bg-apocalypse-850 text-gray-300 hover:border-hazard-yellow/40'
+                          }`}
+                        >
+                          <span>{idx + 1}. {step.title}</span>
+                          <span className="text-[10px] text-hazard-yellow">{step.cmd}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-2 border-t border-apocalypse-800 text-[10px] text-gray-400">
+                  Exact match for Cisco 3560 / 2960 IOS commands
+                </div>
+              </div>
+
+              <div className="lg:col-span-7 bg-apocalypse-950 border border-apocalypse-750 rounded-xl p-4 shadow-xl flex flex-col justify-between font-mono">
+                <div>
+                  <div className="flex items-center justify-between pb-2 border-b border-apocalypse-800 text-xs text-gray-400">
+                    <div className="flex items-center space-x-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                      <span className="pl-2">CONSOLE: SW-CORE (3560 Catalyst - VTY 0)</span>
+                    </div>
+                    <span>9600 8-N-1</span>
+                  </div>
+
+                  <div className="mt-3 h-80 overflow-y-auto space-y-1 text-xs text-gray-200">
+                    {terminalOutput.map((l, i) => (
+                      <div key={i} className={`leading-relaxed ${
+                        l.startsWith('SW-CORE#') ? 'text-hazard-yellow font-bold' :
+                        l.includes('ALERT') || l.includes('CRITICAL') || l.includes('down') ? 'text-hazard-blood font-bold' :
+                        l.includes('SECURED') || l.includes('Success rate is 100') ? 'text-hazard-bio font-bold' :
+                        'text-gray-300'
+                      }`}>
+                        {l}
+                      </div>
+                    ))}
+                    <div className="flex items-center text-hazard-yellow pt-1">
+                      <span>SW-CORE#</span>
+                      <span className="w-2 h-4 bg-hazard-yellow ml-1 animate-pulse"></span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-2 pt-2 border-t border-apocalypse-800 flex justify-between text-[10px] text-gray-500">
+                  <span>SW-CORE CLI EMULATOR</span>
+                  <span>IP: 192.168.100.2</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Section 9: Project Team */}
+          <section id="team" className="py-8 px-4 sm:px-8 max-w-7xl mx-auto">
+            <div className="mb-4">
+              <span className="text-hazard-yellow font-mono text-xs uppercase tracking-wider">Engineering Roster & Topology Distribution</span>
+              <h2 className="text-2xl sm:text-3xl font-bold font-mono text-white">PROJECT TEAM</h2>
+              <p className="text-xs text-gray-400 mt-1 font-mono">Specialized task allocation for the SURVIVORLAN defense network implementation.</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {TEAM_MEMBERS.map(m => (
+                <div key={m.name} className="p-5 rounded-xl bg-apocalypse-900 border border-apocalypse-750 shadow-xl hover:border-hazard-yellow/50 transition-all flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center space-x-3 pb-3 border-b border-apocalypse-800">
+                      <div className="w-10 h-10 rounded bg-apocalypse-850 border border-apocalypse-700 flex items-center justify-center font-mono font-bold text-hazard-yellow text-sm">
+                        {m.name.split(' ').map(n => n[0]).join('')}
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold text-white font-sans">{m.name}</h3>
+                        <p className="text-[11px] text-hazard-yellow font-mono font-semibold">{m.role}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-3.5">
+                      <span className="text-[10px] font-mono text-gray-400 uppercase tracking-wider block mb-1">Assigned Scope & Deliverables:</span>
+                      <p className="text-xs text-gray-300 font-sans leading-relaxed bg-apocalypse-950 p-2.5 rounded border border-apocalypse-800 font-mono">
+                        {m.details}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 pt-3 border-t border-apocalypse-800 flex justify-end">
+                    <a
+                      href={m.linkedin}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1.5 rounded bg-amber-500/10 hover:bg-amber-500/20 text-hazard-yellow border border-hazard-yellow/30 text-xs font-mono transition-all flex items-center gap-1.5"
+                    >
+                      <span>LinkedIn Profile</span>
+                      <span>→</span>
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Footer */}
+          <footer className="mt-12 border-t border-apocalypse-800 py-8 px-4 sm:px-8 text-center text-xs font-mono text-gray-500">
+            <div>SURVIVORLAN — 192.168.0.0/24 CISCO SURVIVAL NETWORK DEMONSTRATION</div>
+            <div className="mt-1">Front-End Architecture & Security Demonstration Platform</div>
+          </footer>
+
+          {/* Projector Presentation Modal */}
+          {isPresentationOpen && (
+            <div className="fixed inset-0 z-50 bg-apocalypse-950 flex flex-col justify-between p-6 sm:p-10 font-sans">
+              <div className="flex justify-between items-center border-b border-apocalypse-800 pb-4 font-mono">
+                <span className="px-3 py-1 rounded bg-hazard-yellow/20 text-hazard-yellow border border-hazard-yellow/40 text-sm font-bold">
+                  TACTICAL BRIEFING {slides[presentationSlide].step} / 07
+                </span>
+                <button
+                  onClick={() => setIsPresentationOpen(false)}
+                  className="px-3 py-1 bg-apocalypse-850 hover:bg-apocalypse-800 rounded border border-apocalypse-700 text-xs text-white"
+                >
+                  ESC / CLOSE
+                </button>
+              </div>
+
+              <div className="max-w-4xl mx-auto w-full my-auto space-y-6">
+                <div>
+                  <span className="text-hazard-orange font-mono text-sm uppercase font-bold">{slides[presentationSlide].subtitle}</span>
+                  <h2 className="text-3xl sm:text-5xl font-extrabold font-mono text-white mt-1">{slides[presentationSlide].title}</h2>
+                </div>
+
+                <div className="p-6 sm:p-8 rounded-2xl bg-apocalypse-900 border border-apocalypse-750 shadow-2xl space-y-4">
+                  <ul className="space-y-3">
+                    {slides[presentationSlide].points.map((p, i) => (
+                      <li key={i} className="text-base sm:text-lg text-gray-200 flex items-start space-x-2.5 leading-relaxed">
+                        <span className="text-hazard-bio font-bold">✓</span>
+                        <span>{p}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <div className="p-3.5 rounded bg-apocalypse-950 border border-hazard-yellow/30 font-mono text-xs sm:text-sm text-hazard-yellow flex justify-between">
+                    <span className="text-gray-400">DATA PATHWAY:</span>
+                    <span className="font-bold">{slides[presentationSlide].diagram}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center border-t border-apocalypse-800 pt-4 max-w-4xl mx-auto w-full font-mono text-xs">
+                <button
+                  onClick={() => setPresentationSlide(0)}
+                  className="px-3 py-1.5 rounded bg-apocalypse-850 border border-apocalypse-700 text-gray-300"
+                >
+                  RESTART (01)
+                </button>
+
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => setPresentationSlide(prev => Math.max(prev - 1, 0))}
+                    disabled={presentationSlide === 0}
+                    className="px-4 py-1.5 rounded bg-apocalypse-850 border border-apocalypse-750 disabled:opacity-30"
+                  >
+                    PREV
+                  </button>
+                  <button
+                    onClick={() => setPresentationSlide(prev => Math.min(prev + 1, slides.length - 1))}
+                    disabled={presentationSlide === slides.length - 1}
+                    className="px-4 py-1.5 rounded bg-hazard-yellow text-black font-bold disabled:opacity-30"
+                  >
+                    NEXT
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
